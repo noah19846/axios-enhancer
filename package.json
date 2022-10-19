@@ -1,6 +1,6 @@
 {
   "name": "axios-enhancer",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "author": "Kisama",
   "license": "MIT",
   "description": "An axios enhancer making it cancelable and retryable",

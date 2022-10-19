@@ -1,95 +1,49 @@
 import type { AxiosStatic, AxiosInstance } from 'axios'
-import axios from 'axios'
+import type { UserConfig } from './types'
 
-import RequestCtlManager from './request-ctl-manager'
+import retryEnhancer from './retry'
+import cancelEnhancer from './cancel'
 
-declare module 'axios' {
-  export interface AxiosRequestConfig {
-    $$userConfig?: UserConfig
-  }
-  export interface AxiosStatic {
-    $$ctlManager: RequestCtlManager
-  }
-  export interface AxiosInstance {
-    $$ctlManager: RequestCtlManager
-  }
+type EnhancerConfig = {
+  retry?: boolean
+  cancel?: boolean
 }
+type AxiosEnhancer = (
+  // eslint-disable-next-line no-unused-vars
+  axiosOrInstance: AxiosInstance | AxiosStatic,
+  // eslint-disable-next-line no-unused-vars
+  enhancerConfig?: EnhancerConfig
+) => AxiosInstance | AxiosStatic
 
-export type UserConfig = {
-  key?: string
-  needCancel?: boolean
-  retryCount?: number
-  [index: string]: unknown
-}
+const axiosEnhancer: AxiosEnhancer = (
+  axiosOrInstance: AxiosInstance | AxiosStatic,
+  enhancerConfig?: EnhancerConfig
+) => {
+  const DEFAULT_CONFIG: UserConfig = {}
 
-const isTimeoutInAxios = (code?: string) => code === 'ECONNABORTED' || code === 'ETIMEDOUT'
-
-export default function axiosEnhancer(axiosOrInstance: AxiosInstance | AxiosStatic) {
-  const ctlManager = new RequestCtlManager()
-  const DEFAULT_USER_CONFIG: UserConfig = {
-    needCancel: false,
-    retryCount: 0
-  }
-
+  // add $$userConfig property to config
   axiosOrInstance.interceptors.request.use(config => {
-    const cfg = config
-
-    if (!cfg.$$userConfig) {
-      cfg.$$userConfig = DEFAULT_USER_CONFIG
-    } else {
-      cfg.$$userConfig = {
-        ...DEFAULT_USER_CONFIG,
-        ...cfg.$$userConfig
-      }
+    if (!config.$$userConfig) {
+      config.$$userConfig = DEFAULT_CONFIG
     }
 
-    if (cfg.$$userConfig.needCancel && !cfg.signal) {
-      const ac = new AbortController()
-
-      if (typeof cfg.$$userConfig.key !== 'string') {
-        cfg.$$userConfig.key = cfg.url
-      }
-      cfg.signal = ac.signal
-      ctlManager.addController(cfg.$$userConfig.key!, ac)
-    }
-
-    return cfg
+    return config
   })
 
-  axiosOrInstance.interceptors.response.use(
-    response => {
-      // remove the controller from map when resolved
-      if (response.config.$$userConfig?.needCancel && response.config.signal) {
-        ctlManager.removeControllerBySignal(response.config.$$userConfig.key!, response.config.signal as AbortSignal)
-      }
+  if (!enhancerConfig) {
+    return cancelEnhancer(retryEnhancer(axiosOrInstance))
+  }
 
-      return response
-    },
+  if (enhancerConfig.retry) {
+    retryEnhancer(axiosOrInstance)
+  }
 
-    error => {
-      const err = error
-
-      if (axios.isAxiosError(err) && err.config) {
-        const { retryCount } = err.config.$$userConfig!
-
-        if (isTimeoutInAxios(err.code) && typeof retryCount === 'number' && retryCount > 0) {
-          err.config.$$userConfig!.retryCount = retryCount - 1
-
-          return axiosOrInstance(err.config)
-        }
-        // remove the controller from map when rejected
-        if (err.config.$$userConfig!.needCancel) {
-          ctlManager.removeControllerBySignal(err.config.$$userConfig!.key as string, err.config.signal as AbortSignal)
-        }
-      }
-
-      return Promise.reject(err)
-    }
-  )
-
-  Object.defineProperty(axiosOrInstance, '$$ctlManager', {
-    value: ctlManager
-  })
+  if (enhancerConfig.cancel) {
+    cancelEnhancer(axiosOrInstance)
+  }
 
   return axiosOrInstance
 }
+
+export default axiosEnhancer
+export { retryEnhancer, cancelEnhancer }

@@ -79,7 +79,7 @@ describe('retry request', () => {
     const rPromise = enhancedAxiosIns.get(url2)
 
     await expect(rPromise).rejects.toThrowError()
-    expect(callEnhancedAxios).toBeCalledTimes(1)
+    expect(callEnhancedAxios).toBeCalledTimes(2)
 
     const rPromise1 = enhancedAxiosIns.get(url2, {
       $$userConfig: {
@@ -87,7 +87,7 @@ describe('retry request', () => {
       }
     })
     await expect(rPromise1).rejects.toThrowError()
-    expect(callEnhancedAxios).toBeCalledTimes(2)
+    expect(callEnhancedAxios).toBeCalledTimes(4)
 
     const rPromise2 = enhancedAxiosIns.get(url2, {
       $$userConfig: {
@@ -95,7 +95,7 @@ describe('retry request', () => {
       }
     })
     await expect(rPromise2).rejects.toThrowError()
-    expect(callEnhancedAxios).toBeCalledTimes(3)
+    expect(callEnhancedAxios).toBeCalledTimes(6)
   })
 
   it('retry 2 times', async () => {
@@ -107,6 +107,6 @@ describe('retry request', () => {
     })
 
     await expect(rPromise).rejects.toThrowError()
-    expect(callEnhancedAxios).toBeCalledTimes(2)
+    expect(callEnhancedAxios).toBeCalledTimes(4)
   })
 })
