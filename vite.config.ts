@@ -17,7 +17,13 @@ export default defineConfig({
     },
     sourcemap: true,
     rollupOptions: {
-      external: ['axios']
+      external: ['axios'],
+      output: {
+        exports: 'named',
+        globals: {
+          axios: 'axios'
+        }
+      }
     }
   }
 })

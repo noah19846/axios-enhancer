@@ -26,6 +26,8 @@ module.exports = {
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/eslint-recommended', 'plugin:prettier/recommended'],
 
   rules: {
-    'prettier/prettier': ['error', prettierRule]
+    'prettier/prettier': ['error', prettierRule],
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': ['error']
   }
 }

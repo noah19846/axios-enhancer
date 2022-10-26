@@ -1,3 +1,5 @@
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
+
 import RequestCtlManager from './request-ctl-manager'
 
 declare module 'axios' {
@@ -14,19 +16,28 @@ declare module 'axios' {
 
 export type RetryConfig = {
   retryCount: number
-  // eslint-disable-next-line no-unused-vars
   retryValidator?: (error?: any) => Boolean
 }
 export type CancelConfig = {
   key?: string
   needCancel: boolean
 }
+export type CallbackConfig = {
+  reject?: boolean
+  onBefore?(config?: AxiosRequestConfig): void
+  successValidator?(res?: AxiosResponse): boolean
+  onSuccess?(res?: AxiosResponse): void
+  getFulfillDataFromResponse?<D = unknown>(res?: AxiosResponse<D>): unknown
+  onFailed?(res: AxiosResponse): void
+  onError?(error: unknown): void
+  onFinally?(data?: unknown): void
+}
 
 type Optional<T> = {
   [P in keyof T]+?: T[P]
 }
 
-export type UserConfig = {
-  [index: string]: unknown
-} & Optional<RetryConfig> &
-  Optional<CancelConfig>
+export type UserConfig<D = { [index: string]: unknown }> = D &
+  Optional<RetryConfig> &
+  Optional<CancelConfig> &
+  Optional<CallbackConfig>

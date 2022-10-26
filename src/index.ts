@@ -3,15 +3,15 @@ import type { UserConfig } from './types'
 
 import retryEnhancer from './retry'
 import cancelEnhancer from './cancel'
+import callbackEnhancer from './callback'
 
 type EnhancerConfig = {
   retry?: boolean
   cancel?: boolean
+  callback?: boolean
 }
 type AxiosEnhancer = (
-  // eslint-disable-next-line no-unused-vars
   axiosOrInstance: AxiosInstance | AxiosStatic,
-  // eslint-disable-next-line no-unused-vars
   enhancerConfig?: EnhancerConfig
 ) => AxiosInstance | AxiosStatic
 
@@ -31,7 +31,7 @@ const axiosEnhancer: AxiosEnhancer = (
   })
 
   if (!enhancerConfig) {
-    return cancelEnhancer(retryEnhancer(axiosOrInstance))
+    return callbackEnhancer(cancelEnhancer(retryEnhancer(axiosOrInstance)))
   }
 
   if (enhancerConfig.retry) {
@@ -42,8 +42,12 @@ const axiosEnhancer: AxiosEnhancer = (
     cancelEnhancer(axiosOrInstance)
   }
 
+  if (enhancerConfig.callback) {
+    callbackEnhancer(axiosOrInstance)
+  }
+
   return axiosOrInstance
 }
 
 export default axiosEnhancer
-export { retryEnhancer, cancelEnhancer }
+export { retryEnhancer, cancelEnhancer, callbackEnhancer }
