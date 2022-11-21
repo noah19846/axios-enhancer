@@ -20,7 +20,7 @@ export default function callbackEnhancer(axiosOrInstance: AxiosInstance | AxiosS
       ...DEFAULT_CONFIG,
       ...config.$$userConfig
     }
-    config.$$userConfig.onBefore!()
+    config.$$userConfig.onBefore!(config)
 
     return config
   })
