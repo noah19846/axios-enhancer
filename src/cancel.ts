@@ -52,9 +52,11 @@ export default function cancelEnhancer(axiosOrInstance: AxiosInstance | AxiosSta
     }
   )
 
-  Object.defineProperty(axiosOrInstance, '$$ctlManager', {
-    value: ctlManager
-  })
+  if (!(axiosOrInstance.$$ctlManager instanceof RequestCtlManager)) {
+    Object.defineProperty(axiosOrInstance, '$$ctlManager', {
+      value: ctlManager
+    })
+  }
 
   return axiosOrInstance
 }

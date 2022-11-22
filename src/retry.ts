@@ -1,10 +1,10 @@
 import type { AxiosStatic, AxiosInstance } from 'axios'
 import type { RetryConfig } from './types'
 
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 
 const isTimeoutErrorInAxios = (error?: any) =>
-  axios.isAxiosError(error) && (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT')
+  axios.isAxiosError(error) && (error.code === AxiosError.ECONNABORTED || error.code === AxiosError.ETIMEDOUT)
 
 export default function retryEnhancer(axiosOrInstance: AxiosInstance | AxiosStatic) {
   const DEFAULT_CONFIG: RetryConfig = {
