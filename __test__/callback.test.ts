@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import axios from 'axios'
 import axiosEnhancer from '../src/index'
-import { sleep, URL } from './utils'
+import { URL } from './utils'
 
 const cfg = {
   onBefore() {},
@@ -41,7 +41,6 @@ describe('callback', () => {
 
     const rPromise = enhancedAxiosIns.get(URL, {
       adapter: async config => {
-        await sleep()
         return Promise.resolve({
           data: {},
           status: 200,
@@ -73,7 +72,6 @@ describe('callback', () => {
 
     const rPromise = enhancedAxiosIns.get(URL, {
       adapter: async config => {
-        await sleep()
         return Promise.resolve({
           data: {
             origin: 'hi'
@@ -110,7 +108,6 @@ describe('callback', () => {
 
     const rPromise = enhancedAxiosIns.get(URL, {
       adapter: async config => {
-        await sleep()
         return Promise.resolve({
           data: {
             origin: 'hi'
