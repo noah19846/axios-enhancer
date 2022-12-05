@@ -22,13 +22,13 @@ export type CancelConfig = {
   key?: string
   needCancel: boolean
 }
-export type CallbackConfig = {
+export type CallbackConfig<D = unknown> = {
   reject?: boolean
   onBefore?(config?: AxiosRequestConfig): void
-  successValidator?(res?: AxiosResponse): boolean
-  onSuccess?(res?: AxiosResponse): void
-  getFulfillDataFromResponse?<D = unknown>(res?: AxiosResponse<D>): unknown
-  onFailed?(res: AxiosResponse): void
+  successValidator?(res: AxiosResponse<D>): boolean
+  onSuccess?(res: AxiosResponse<D>): void
+  getFulfillDataFromResponse?(res: AxiosResponse<D>): unknown
+  onFailed?(res: AxiosResponse<D>): void
   onError?(error: unknown): void
   onFinally?(data?: unknown): void
 }

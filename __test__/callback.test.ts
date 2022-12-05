@@ -1,7 +1,13 @@
+import type { CallbackConfig } from '../src/types'
+
 import { describe, expect, it, vi } from 'vitest'
 import axios from 'axios'
 import axiosEnhancer from '../src/index'
 import { URL } from './utils'
+
+type D = {
+  origin: string
+}
 
 const cfg = {
   onBefore() {},
@@ -62,13 +68,22 @@ describe('callback', () => {
     expect(callOnFinally).toBeCalledTimes(1)
   })
 
-  it('success by res', async () => {
+  it('success by res, getFulfillDataFromResponse', async () => {
     const enhancedAxiosIns = axiosEnhancer(axios.create())
     const callOnBefore = vi.spyOn(cfg, 'onBefore')
     const callOnSuccess = vi.spyOn(cfg, 'onSuccess')
     const callOnFailed = vi.spyOn(cfg, 'onFailed')
     const callOnError = vi.spyOn(cfg, 'onError')
     const callOnFinally = vi.spyOn(cfg, 'onFinally')
+
+    const eC: CallbackConfig<D> = {
+      successValidator: res => {
+        return !!res.data.origin
+      },
+      getFulfillDataFromResponse(res) {
+        return res.data
+      }
+    }
 
     const rPromise = enhancedAxiosIns.get(URL, {
       adapter: async config => {
@@ -84,13 +99,11 @@ describe('callback', () => {
       },
       $$userConfig: {
         ...cfg,
-        successValidator: res => {
-          return !!res?.data.origin
-        }
+        ...eC
       }
     })
 
-    await expect(rPromise).resolves.toBeDefined()
+    await expect(rPromise).resolves.toHaveProperty('origin')
     expect(callOnBefore).toBeCalledTimes(1)
     expect(callOnSuccess).toBeCalledTimes(1)
     expect(callOnFailed).toBeCalledTimes(0)
@@ -98,13 +111,23 @@ describe('callback', () => {
     expect(callOnFinally).toBeCalledTimes(1)
   })
 
-  it('failed by res', async () => {
+  it('failed with res', async () => {
     const enhancedAxiosIns = axiosEnhancer(axios.create())
     const callOnBefore = vi.spyOn(cfg, 'onBefore')
     const callOnSuccess = vi.spyOn(cfg, 'onSuccess')
     const callOnFailed = vi.spyOn(cfg, 'onFailed')
     const callOnError = vi.spyOn(cfg, 'onError')
     const callOnFinally = vi.spyOn(cfg, 'onFinally')
+
+    const eC: CallbackConfig<D> = {
+      reject: false,
+      successValidator: res => {
+        return !res.data.origin
+      },
+      getFulfillDataFromResponse(res) {
+        return res.data.origin
+      }
+    }
 
     const rPromise = enhancedAxiosIns.get(URL, {
       adapter: async config => {
@@ -120,9 +143,49 @@ describe('callback', () => {
       },
       $$userConfig: {
         ...cfg,
-        successValidator: res => {
-          return !res?.data.origin
-        }
+        ...eC
+      }
+    })
+
+    const data = await rPromise
+
+    expect(data).toBe('hi')
+    expect(callOnBefore).toBeCalledTimes(1)
+    expect(callOnSuccess).toBeCalledTimes(0)
+    expect(callOnFailed).toBeCalledTimes(1)
+    expect(callOnError).toBeCalledTimes(0)
+    expect(callOnFinally).toBeCalledTimes(1)
+  })
+
+  it('error with res', async () => {
+    const enhancedAxiosIns = axiosEnhancer(axios.create())
+    const callOnBefore = vi.spyOn(cfg, 'onBefore')
+    const callOnSuccess = vi.spyOn(cfg, 'onSuccess')
+    const callOnFailed = vi.spyOn(cfg, 'onFailed')
+    const callOnError = vi.spyOn(cfg, 'onError')
+    const callOnFinally = vi.spyOn(cfg, 'onFinally')
+
+    const eC: CallbackConfig<D> = {
+      successValidator: res => {
+        return !res.data.origin
+      }
+    }
+
+    const rPromise = enhancedAxiosIns.get(URL, {
+      adapter: async config => {
+        return Promise.resolve({
+          data: {
+            origin: 'hi'
+          },
+          status: 200,
+          statusText: 'ok',
+          headers: {},
+          config
+        })
+      },
+      $$userConfig: {
+        ...cfg,
+        ...eC
       }
     })
 
