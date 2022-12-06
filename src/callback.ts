@@ -43,11 +43,10 @@ export default function callbackEnhancer(axiosOrInstance: AxiosInstance | AxiosS
         return Promise.reject(fulfilledData)
       }
 
-      return fulfilledData
+      return fulfilledData as any
     },
 
     error => {
-      // doesn't work for those errors that don't have config values, such as `ERR_CANCELED`
       if (error?.config?.$$userConfig) {
         error.config.$$userConfig.onError(error)
         error.config.$$userConfig.onFinally(error)
